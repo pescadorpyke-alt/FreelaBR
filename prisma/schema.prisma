@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  document  String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects Project[]
+}
+
+model Project {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  rateType    String       @default("hourly") // "hourly" | "fixed"
+  rateValue   Float        @default(0)
+  status      String       @default("active") // "active" | "completed" | "archived"
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  timeEntries TimeEntry[]
+}
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  description String?
+  startedAt   DateTime
+  stoppedAt   DateTime?
+  duration    Int?      // in seconds, calculated on stop
+  createdAt   DateTime  @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
