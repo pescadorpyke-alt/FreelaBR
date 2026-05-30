@@ -8,6 +8,8 @@ import {
   Timer,
   LayoutDashboard,
   Receipt,
+  FileText,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -16,14 +18,16 @@ const links = [
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/projects", label: "Projetos", icon: FolderOpen },
   { href: "/timer", label: "Timer", icon: Timer },
+  { href: "/invoices", label: "Recibos", icon: FileText },
   { href: "/fiscal", label: "Fiscal", icon: Receipt },
+  { href: "/settings", label: "Configurações", icon: SettingsIcon },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 shrink-0 border-r border-border bg-card flex flex-col">
+    <aside className="no-print w-56 shrink-0 border-r border-border bg-card flex flex-col">
       <div className="p-4 border-b border-border">
         <h1 className="text-lg font-bold text-primary">FreelaBR</h1>
       </div>

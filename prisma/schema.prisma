@@ -18,6 +18,7 @@ model Client {
   updatedAt DateTime @updatedAt
 
   projects Project[]
+  invoices Invoice[]
 }
 
 model Project {
@@ -34,6 +35,40 @@ model Project {
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   timeEntries TimeEntry[]
+  invoices    Invoice[]
+}
+
+// Dados do próprio freelancer (linha única, id fixo "default").
+// Necessário para o cabeçalho do recibo e para gerar o BR Code Pix.
+model Settings {
+  id         String   @id @default("default")
+  name       String   @default("")
+  document   String?
+  email      String?
+  phone      String?
+  pixKey     String?
+  pixKeyType String? // cpf | cnpj | email | phone | random
+  city       String? // usado no BR Code Pix
+  updatedAt  DateTime @updatedAt
+}
+
+model Invoice {
+  id          String    @id @default(cuid())
+  number      Int       @unique
+  description String
+  amount      Float
+  status      String    @default("draft") // draft | sent | paid
+  issuedAt    DateTime  @default(now())
+  dueDate     DateTime?
+  txid        String? // identificador da transação Pix
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 }
 
 model TimeEntry {
