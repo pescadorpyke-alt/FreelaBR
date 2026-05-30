@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatDocument, formatPhone, formatCurrency } from "@/lib/format";
 import { Pencil, Mail, Phone, FileText, ArrowLeft } from "lucide-react";
 import { DeleteClientButton } from "@/components/delete-client-button";
@@ -12,10 +13,13 @@ export default async function ClientDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const { id } = await params;
 
-  const client = await prisma.client.findUnique({
-    where: { id },
+  const client = await prisma.client.findFirst({
+    where: { id, userId },
     include: {
       projects: {
         orderBy: { createdAt: "desc" },

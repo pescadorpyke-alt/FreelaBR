@@ -1,18 +1,23 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { TimerWidget } from "@/components/timer-widget";
 import { TimeEntryList } from "@/components/time-entry-list";
 
 export const dynamic = "force-dynamic";
 
 export default async function TimerPage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const [projects, recentEntries] = await Promise.all([
     prisma.project.findMany({
-      where: { status: "active" },
+      where: { status: "active", userId },
       include: { client: { select: { name: true } } },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.timeEntry.findMany({
-      where: { stoppedAt: { not: null } },
+      where: { stoppedAt: { not: null }, project: { userId } },
       include: {
         project: {
           select: { name: true, client: { select: { name: true } } },

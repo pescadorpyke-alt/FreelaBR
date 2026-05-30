@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { requireUserId } from "@/lib/auth-helpers";
 import { NextRequest } from "next/server";
 
 export async function GET() {
+  const auth = await requireUserId();
+  if ("error" in auth) return auth.error;
+
   const invoices = await prisma.invoice.findMany({
+    where: { userId: auth.userId },
     include: {
       client: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
@@ -13,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUserId();
+  if ("error" in auth) return auth.error;
+
   const body = await request.json();
   const { clientId, projectId, description, amount, dueDate } = body;
 
@@ -30,13 +38,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, userId: auth.userId },
+    select: { id: true },
+  });
   if (!client) {
     return Response.json({ error: "Cliente não encontrado" }, { status: 404 });
   }
 
-  // Próximo número sequencial
+  // Próximo número sequencial por usuário
   const last = await prisma.invoice.findFirst({
+    where: { userId: auth.userId },
     orderBy: { number: "desc" },
     select: { number: true },
   });
@@ -44,6 +56,7 @@ export async function POST(request: NextRequest) {
 
   const invoice = await prisma.invoice.create({
     data: {
+      userId: auth.userId,
       number: nextNumber,
       clientId,
       projectId: projectId || null,

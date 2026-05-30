@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ClientForm } from "@/components/client-form";
 import Link from "next/link";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +12,13 @@ export default async function EditClientPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const { id } = await params;
 
-  const client = await prisma.client.findUnique({
-    where: { id },
+  const client = await prisma.client.findFirst({
+    where: { id, userId },
   });
 
   if (!client) notFound();

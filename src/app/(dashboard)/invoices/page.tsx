@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatCurrency } from "@/lib/format";
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
@@ -12,7 +14,11 @@ const statusLabels: Record<string, { label: string; className: string }> = {
 };
 
 export default async function InvoicesPage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const invoices = await prisma.invoice.findMany({
+    where: { userId },
     include: { client: { select: { name: true } } },
     orderBy: { number: "desc" },
   });

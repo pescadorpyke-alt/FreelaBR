@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { requireUserId } from "@/lib/auth-helpers";
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUserId();
+  if ("error" in auth) return auth.error;
+
   const body = await request.json();
   const { projectId, description, startedAt, stoppedAt } = body;
 
@@ -10,6 +14,15 @@ export async function POST(request: NextRequest) {
       { error: "projectId, startedAt e stoppedAt são obrigatórios" },
       { status: 400 }
     );
+  }
+
+  // Projeto precisa pertencer ao usuário
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId: auth.userId },
+    select: { id: true },
+  });
+  if (!project) {
+    return Response.json({ error: "Projeto não encontrado" }, { status: 404 });
   }
 
   const start = new Date(startedAt);
@@ -37,8 +50,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const auth = await requireUserId();
+  if ("error" in auth) return auth.error;
+
   const entries = await prisma.timeEntry.findMany({
-    where: { stoppedAt: { not: null } },
+    where: { stoppedAt: { not: null }, project: { userId: auth.userId } },
     include: {
       project: {
         select: { name: true, client: { select: { name: true } } },

@@ -1,12 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatDocument, formatPhone } from "@/lib/format";
 import { Plus, Mail, Phone, FileText } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientsPage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const clients = await prisma.client.findMany({
+    where: { userId },
     include: { projects: { select: { id: true } } },
     orderBy: { createdAt: "desc" },
   });

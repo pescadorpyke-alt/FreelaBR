@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { NewInvoiceForm } from "@/components/new-invoice-form";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -6,7 +8,11 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const clients = await prisma.client.findMany({
+    where: { userId },
     orderBy: { name: "asc" },
     select: {
       id: true,

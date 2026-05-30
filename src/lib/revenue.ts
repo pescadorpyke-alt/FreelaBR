@@ -13,17 +13,15 @@ export interface AnnualRevenue {
 }
 
 /**
- * Calcula o faturamento estimado de um ano-calendário.
+ * Calcula o faturamento estimado de um ano-calendário para um usuário.
  *
  * Observação: enquanto não há registro de pagamentos/invoices, o
  * faturamento é estimado a partir de:
  *  - projetos por hora: soma das horas registradas no ano × valor/hora
  *  - projetos fixos: valor do projeto, alocado no mês de criação
- *
- * Quando os invoices forem implementados, esta função deve passar a
- * considerar os valores efetivamente faturados/recebidos.
  */
 export async function getAnnualRevenue(
+  userId: string,
   year: number = new Date().getFullYear()
 ): Promise<AnnualRevenue> {
   const start = new Date(year, 0, 1);
@@ -34,7 +32,7 @@ export async function getAnnualRevenue(
       where: {
         duration: { not: null },
         startedAt: { gte: start, lt: end },
-        project: { rateType: "hourly" },
+        project: { rateType: "hourly", userId },
       },
       select: {
         duration: true,
@@ -44,6 +42,7 @@ export async function getAnnualRevenue(
     }),
     prisma.project.findMany({
       where: {
+        userId,
         rateType: "fixed",
         createdAt: { gte: start, lt: end },
       },

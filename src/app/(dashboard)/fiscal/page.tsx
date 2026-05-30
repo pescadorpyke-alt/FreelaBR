@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatCurrency } from "@/lib/format";
 import { getAnnualRevenue } from "@/lib/revenue";
 import {
@@ -13,10 +15,13 @@ import { TrendingUp, Receipt, Calendar } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function FiscalPage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
 
-  const annualRevenue = await getAnnualRevenue(currentYear);
+  const annualRevenue = await getAnnualRevenue(userId, currentYear);
   const status = getMeiStatus(annualRevenue.total);
   const monthlyDAS = getMonthlyDAS("servicos");
   const projection = projectAnnualRevenue(annualRevenue.total, currentMonth);

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatCurrency } from "@/lib/format";
 import { getAnnualRevenue } from "@/lib/revenue";
 import { getMonthlyDAS } from "@/lib/tax";
@@ -8,17 +10,20 @@ import { Users, FolderOpen, Clock, DollarSign, Receipt } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const currentYear = new Date().getFullYear();
 
   const [clientCount, projectCount, timeEntries, annualRevenue] =
     await Promise.all([
-      prisma.client.count(),
-      prisma.project.count(),
+      prisma.client.count({ where: { userId } }),
+      prisma.project.count({ where: { userId } }),
       prisma.timeEntry.findMany({
-        where: { duration: { not: null } },
+        where: { duration: { not: null }, project: { userId } },
         select: { duration: true },
       }),
-      getAnnualRevenue(currentYear),
+      getAnnualRevenue(userId, currentYear),
     ]);
 
   const totalHours =

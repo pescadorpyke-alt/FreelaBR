@@ -4,7 +4,25 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("")
+  document     String?
+  phone        String?
+  pixKey       String?
+  pixKeyType   String? // cpf | cnpj | email | phone | random
+  city         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clients  Client[]
+  projects Project[]
+  invoices Invoice[]
 }
 
 model Client {
@@ -17,58 +35,36 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   projects Project[]
   invoices Invoice[]
+
+  @@index([userId])
 }
 
 model Project {
-  id          String       @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  rateType    String       @default("hourly") // "hourly" | "fixed"
-  rateValue   Float        @default(0)
-  status      String       @default("active") // "active" | "completed" | "archived"
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  rateType    String   @default("hourly") // "hourly" | "fixed"
+  rateValue   Float    @default(0)
+  status      String   @default("active") // "active" | "completed" | "archived"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   clientId String
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   timeEntries TimeEntry[]
   invoices    Invoice[]
-}
 
-// Dados do próprio freelancer (linha única, id fixo "default").
-// Necessário para o cabeçalho do recibo e para gerar o BR Code Pix.
-model Settings {
-  id         String   @id @default("default")
-  name       String   @default("")
-  document   String?
-  email      String?
-  phone      String?
-  pixKey     String?
-  pixKeyType String? // cpf | cnpj | email | phone | random
-  city       String? // usado no BR Code Pix
-  updatedAt  DateTime @updatedAt
-}
-
-model Invoice {
-  id          String    @id @default(cuid())
-  number      Int       @unique
-  description String
-  amount      Float
-  status      String    @default("draft") // draft | sent | paid
-  issuedAt    DateTime  @default(now())
-  dueDate     DateTime?
-  txid        String? // identificador da transação Pix
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  clientId String
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  @@index([userId])
+  @@index([clientId])
 }
 
 model TimeEntry {
@@ -76,9 +72,37 @@ model TimeEntry {
   description String?
   startedAt   DateTime
   stoppedAt   DateTime?
-  duration    Int?      // in seconds, calculated on stop
+  duration    Int? // em segundos, calculado ao parar
   createdAt   DateTime  @default(now())
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Invoice {
+  id          String    @id @default(cuid())
+  number      Int
+  description String
+  amount      Float
+  status      String    @default("draft") // draft | sent | paid
+  issuedAt    DateTime  @default(now())
+  dueDate     DateTime?
+  txid        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, number])
+  @@index([userId])
+  @@index([clientId])
 }

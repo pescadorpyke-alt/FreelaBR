@@ -1,10 +1,16 @@
-import { getSettings } from "@/lib/settings";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
+import { getProfile } from "@/lib/settings";
 import { SettingsForm } from "@/components/settings-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const settings = await getSettings();
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
+  const profile = await getProfile(userId);
+  if (!profile) redirect("/login");
 
   return (
     <div>
@@ -14,7 +20,7 @@ export default async function SettingsPage() {
           Seus dados e chave Pix para emissão de recibos.
         </p>
       </div>
-      <SettingsForm initialData={settings} />
+      <SettingsForm initialData={profile} />
     </div>
   );
 }

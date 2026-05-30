@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   Users,
   FolderOpen,
@@ -10,6 +11,7 @@ import {
   Receipt,
   FileText,
   Settings as SettingsIcon,
+  LogOut,
 } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -23,7 +25,7 @@ const links = [
   { href: "/settings", label: "Configurações", icon: SettingsIcon },
 ];
 
-export function Sidebar() {
+export function Sidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
 
   return (
@@ -51,8 +53,18 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">FreelaBR v0.1.0</p>
+      <div className="p-3 border-t border-border space-y-2">
+        <div className="px-2">
+          <p className="text-sm font-medium truncate">{userName}</p>
+          <p className="text-xs text-muted-foreground">FreelaBR v0.1.0</p>
+        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <LogOut size={18} />
+          Sair
+        </button>
       </div>
     </aside>
   );

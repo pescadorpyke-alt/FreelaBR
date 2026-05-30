@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { formatCurrency } from "@/lib/format";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -11,10 +13,14 @@ export default async function ProjectsPage({
 }: {
   searchParams: Promise<{ clientId?: string }>;
 }) {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const { clientId } = await searchParams;
 
   const [projects, clients] = await Promise.all([
     prisma.project.findMany({
+      where: { userId },
       include: {
         client: { select: { id: true, name: true } },
         timeEntries: { select: { duration: true } },
@@ -22,6 +28,7 @@ export default async function ProjectsPage({
       orderBy: { createdAt: "desc" },
     }),
     prisma.client.findMany({
+      where: { userId },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),

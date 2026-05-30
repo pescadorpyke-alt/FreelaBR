@@ -117,15 +117,16 @@ export function SettingsForm({ initialData }: { initialData: SettingsData }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
+              Email (login)
             </label>
             <input
               id="email"
               name="email"
               type="email"
               defaultValue={initialData.email ?? ""}
-              className={inputClass}
-              placeholder="voce@email.com"
+              readOnly
+              disabled
+              className={`${inputClass} opacity-60 cursor-not-allowed`}
             />
           </div>
           <div>

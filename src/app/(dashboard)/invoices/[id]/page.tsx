@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
+import { getProfile } from "@/lib/settings";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { generatePixPayload } from "@/lib/pix";
 import { formatCurrency, formatDocument } from "@/lib/format";
 import { InvoiceActions } from "@/components/invoice-actions";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import QRCode from "qrcode";
@@ -23,17 +24,21 @@ export default async function InvoiceDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/login");
+
   const { id } = await params;
 
   const [invoice, settings] = await Promise.all([
-    prisma.invoice.findUnique({
-      where: { id },
+    prisma.invoice.findFirst({
+      where: { id, userId },
       include: { client: true, project: true },
     }),
-    getSettings(),
+    getProfile(userId),
   ]);
 
   if (!invoice) notFound();
+  if (!settings) redirect("/login");
 
   // Gera o Pix Copia e Cola + QR Code, se houver chave configurada
   let pixCode: string | null = null;

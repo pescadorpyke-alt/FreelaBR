@@ -1,13 +1,20 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { Sidebar } from "@/components/sidebar";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <Sidebar userName={session.user.name ?? session.user.email ?? "Usuário"} />
       <main className="flex-1 overflow-y-auto p-6">{children}</main>
     </div>
   );
