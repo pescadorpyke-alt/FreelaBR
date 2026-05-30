@@ -2,14 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, FolderOpen, Timer, LayoutDashboard } from "lucide-react";
+import {
+  Users,
+  FolderOpen,
+  Timer,
+  LayoutDashboard,
+  Receipt,
+} from "lucide-react";
 import { clsx } from "clsx";
 
 const links = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/projects", label: "Projetos", icon: FolderOpen },
   { href: "/timer", label: "Timer", icon: Timer },
+  { href: "/fiscal", label: "Fiscal", icon: Receipt },
 ];
 
 export function Sidebar() {
@@ -22,7 +29,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 p-2 space-y-1">
         {links.map(({ href, label, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = pathname.startsWith(href);
           return (
             <Link
               key={href}
